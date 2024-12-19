@@ -271,13 +271,24 @@ def load_user(user_id):
 @app.route('/manage')
 @login_required
 def manage_events():
-    if not current_user.is_admin:
-        flash('אין לך הרשאות לצפות בדף זה', 'error')
-        return redirect(url_for('index'))
-    
-    with open('data/events.json', 'r', encoding='utf-8') as file:
-        events = json.load(file)
-    return render_template('manage_events.html', events=events)
+    try:
+        app.logger.debug('Accessing manage_events route')
+        
+        if not current_user.is_admin:
+            app.logger.warning(f'Non-admin user {current_user.email} attempted to access admin page')
+            flash('אין לך הרשאות לצפות בדף זה', 'error')
+            return redirect(url_for('index'))
+        
+        app.logger.debug('Loading events from JSON file')
+        with open('data/events.json', 'r', encoding='utf-8') as file:
+            events = json.load(file)
+        
+        app.logger.debug(f'Successfully loaded {len(events)} events')
+        return render_template('manage_events.html', events=events)
+        
+    except Exception as e:
+        app.logger.error(f'Error in manage_events: {str(e)}')
+        return f'שגיאה בטעינת דף הניהול: {str(e)}', 500
 
 @app.route('/event/add', methods=['GET', 'POST'])
 @login_required
@@ -586,7 +597,7 @@ def reset_password():
             reset_link = url_for('reset_password_confirm', token=token, _external=True)
             
             try:
-                msg = Message('איפוס סיסמה - ומלאה הארץ פאר��ריינגענס',
+                msg = Message('איפוס סיסמה - ומלאה הארץ פאריינגענס',
                             recipients=[email])
                 msg.html = render_template('email/reset_password.html', 
                                         reset_link=reset_link)
