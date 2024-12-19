@@ -47,19 +47,35 @@
         </div>
 
         <div class="filter-bar">
-            <form action="/search" method="get" class="filter-form">
-                <div class="filter-group">
-                    <input type="text" name="city" placeholder="חיפוש לפי עיר" value="{{ request.args.get('city', '') }}">
-                    <input type="date" name="date" value="{{ request.args.get('date', '') }}">
-                    <select name="type">
-                        <option value="">כל הסוגים</option>
-                        <option value="weekly" {% if request.args.get('type') == 'weekly' %}selected{% endif %}>התוועדות שבועית</option>
-                        <option value="shabbat" {% if request.args.get('type') == 'shabbat' %}selected{% endif %}>התוועדות שבת</option>
-                    </select>
-                    <button type="submit">
-                        <i class="fas fa-filter"></i> סנן
-                    </button>
+            <form action="{{ url_for('search') }}" method="GET">
+                <div class="form-group">
+                    <label for="city">עיר</label>
+                    <input type="text" name="city" id="city" value="{{ filters.city }}">
                 </div>
+
+                <div class="form-group">
+                    <label for="date">תאריך</label>
+                    <input type="date" name="date" id="date" value="{{ filters.date }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="type">סוג התוועדות</label>
+                    <select name="type" id="type">
+                        <option value="">הכל</option>
+                        <option value="התוועדות" {% if filters.type == 'התוועדות' %}selected{% endif %}>התוועדות</option>
+                        <option value="שיעור" {% if filters.type == 'שיעור' %}selected{% endif %}>שיעור</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="show_past" value="true" 
+                               {% if filters.show_past %}checked{% endif %}>
+                        הצג גם התוועדויות שהיו
+                    </label>
+                </div>
+
+                <button type="submit">חפש</button>
             </form>
         </div>
 

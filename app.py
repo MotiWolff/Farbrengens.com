@@ -251,9 +251,10 @@ def search():
         # Sort events
         filtered_events.sort(key=lambda x: x.get('date', ''))
         
+        # Pass both events and filters to template
         return render_template('results.html', 
                              events=filtered_events, 
-                             filters=filters)
+                             filters=filters)  # העברת הפילטרים לתבנית
                              
     except Exception as e:
         app.logger.error(f'Error in search: {str(e)}')
@@ -553,7 +554,7 @@ def manage_users():
 @login_required
 def delete_user(user_id):
     if not current_user.is_admin:
-        return jsonify({'status': 'error', 'message': 'אין לך הרשאות למחוק משתמ��ים'})
+        return jsonify({'status': 'error', 'message': 'אין לך הרשאות למחוק משתמשים'})
     
     if current_user.id == user_id:
         return jsonify({'status': 'error', 'message': 'לא ניתן מחוק את המשתמש הנוכחי'})
@@ -868,7 +869,7 @@ def register_event(event_id):
     db.session.add(registration)
     db.session.commit()
     
-    flash('נרשמת בהצלחה להתוועדות!', 'success')
+    flash('נרשמת בהצלחה ל��תוועדות!', 'success')
     return redirect(url_for('event_details', event_id=event_id))
 
 @app.route('/import-data', methods=['GET'])
