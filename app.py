@@ -565,7 +565,7 @@ def subscribe_newsletter():
     email = request.form.get('email')
     
     if not email:
-        return jsonify({'status': 'error', 'message': 'נדר��ת כתובת אימייל'})
+        return jsonify({'status': 'error', 'message': 'נדרשת כתובת אימייל'})
     
     try:
         # Check if already subscribed
@@ -744,6 +744,28 @@ def register_event(event_id):
     
     flash('נרשמת בהצלחה להתוועדות!', 'success')
     return redirect(url_for('event_details', event_id=event_id))
+
+@app.route('/import-data', methods=['GET'])
+def import_data_route():
+    try:
+        with app.app_context():
+            # יצירת הטבלאות
+            db.create_all()
+            
+            # יצירת משתמש אדמין ראשון
+            admin = User(
+                username='admin',
+                email='motiwolff@gmail.com',
+                password_hash='your_password_hash_here',  # החלף את זה בהאש האמיתי
+                is_admin=True
+            )
+            
+            db.session.add(admin)
+            db.session.commit()
+            
+            return 'Database initialized successfully!'
+    except Exception as e:
+        return f'Error: {str(e)}'
 
 if __name__ == '__main__':
     with app.app_context():
