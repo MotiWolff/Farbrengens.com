@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///local.db')
 app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', 'static/images')
 app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_FILE_SIZE', 5 * 1024 * 1024))
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
@@ -565,7 +565,7 @@ def subscribe_newsletter():
     email = request.form.get('email')
     
     if not email:
-        return jsonify({'status': 'error', 'message': 'נדרשת כתובת אימייל'})
+        return jsonify({'status': 'error', 'message': 'נדר��ת כתובת אימייל'})
     
     try:
         # Check if already subscribed
