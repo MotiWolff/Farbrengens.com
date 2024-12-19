@@ -197,6 +197,14 @@ def index():
         with open('data/events.json', 'r', encoding='utf-8') as file:
             events = json.load(file)
         
+        # Get current filters from request
+        filters = {
+            'city': request.args.get('city', ''),
+            'date': request.args.get('date', ''),
+            'type': request.args.get('type', ''),
+            'show_past': request.args.get('show_past', 'false').lower() == 'true'
+        }
+        
         # Separate upcoming and past events
         upcoming_events = []
         past_events = []
@@ -214,7 +222,8 @@ def index():
         
         return render_template('index.html', 
                              upcoming_events=upcoming_events,
-                             past_events=past_events)
+                             past_events=past_events,
+                             filters=filters)  # העברת הפילטרים לתבנית
     except Exception as e:
         app.logger.error(f'Error rendering index: {str(e)}')
         return str(e), 500
@@ -482,7 +491,7 @@ def edit_event(event_id):
                         os.remove(image_path)
                     event['image'] = None
                 except Exception as e:
-                    flash(f'שגיאה בחיקת התמונה: {str(e)}', 'error')
+                    flash(f'שגיאה בחיקת הת��ונה: {str(e)}', 'error')
             
             # Handle new image upload
             if not remove_image and 'image' in request.files:
@@ -760,7 +769,7 @@ def reset_password_confirm(token):
     
     if not user or not user.reset_token_expiry or \
        user.reset_token_expiry < datetime.utcnow():
-        flash('הקישור לאיפוס הסיסמה אינו תקי או פג תוקף', 'error')
+        flash('הקישור ��איפוס הסיסמה אינו תקי או פג תוקף', 'error')
         return redirect(url_for('reset_password'))
     
     if request.method == 'POST':
@@ -869,7 +878,7 @@ def register_event(event_id):
     db.session.add(registration)
     db.session.commit()
     
-    flash('נרשמת בהצלחה ל��תוועדות!', 'success')
+    flash('נרשמת בהצלחה להתוועדות!', 'success')
     return redirect(url_for('event_details', event_id=event_id))
 
 @app.route('/import-data', methods=['GET'])
