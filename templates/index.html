@@ -102,16 +102,6 @@
             <!-- Search Form -->
             <form action="{{ url_for('search') }}" method="GET" class="search-form">
                 <div class="form-group">
-                    <label for="city">עיר</label>
-                    <input type="text" name="city" id="city" value="{{ filters.city }}">
-                </div>
-
-                <div class="form-group">
-                    <label for="date">תאריך</label>
-                    <input type="date" name="date" id="date" value="{{ filters.date }}">
-                </div>
-
-                <div class="form-group">
                     <label for="type">סוג התוועדות</label>
                     <select name="type" id="type">
                         <option value="">הכל</option>
@@ -121,9 +111,19 @@
                 </div>
 
                 <div class="form-group">
-                    <label>
-                        <input type="checkbox" name="show_past" value="true" 
-                               {% if filters.show_past %}checked{% endif %}>
+                    <label for="date">תאריך</label>
+                    <input type="date" name="date" id="date" value="{{ filters.date }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="city">חפש לפי עיר</label>
+                    <input type="text" name="city" id="city" value="{{ filters.city }}" placeholder="לדוגמה: תל אביב">
+                </div>
+
+                <div class="form-check">
+                    <input type="checkbox" name="show_past" value="true" id="showPastEvents" 
+                           {% if filters.show_past %}checked{% endif %}>
+                    <label for="showPastEvents">
                         הצג גם התוועדויות שהיו
                     </label>
                 </div>
@@ -131,54 +131,36 @@
                 <button type="submit">חפש</button>
             </form>
 
-            <!-- Upcoming Events -->
-            <section class="events-section">
-                <h2>התוועדויות קרובות</h2>
-                {% if upcoming_events %}
-                    {% for event in upcoming_events %}
-                        <div class="event-card">
-                            <span class="event-date">{{ event.date }}</span>
-                            <h3>{{ event.title }}</h3>
-                            <p>{{ event.description }}</p>
-                            <!-- Additional event details -->
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="no-events">אין התוועדויות קרובות כרגע</p>
-                {% endif %}
-            </section>
-
-            <!-- Past Events Toggle -->
-            <div class="show-past-events">
-                <input type="checkbox" id="showPastEvents" name="show_past" value="true">
-                <label for="showPastEvents">הצג התוועדויות שהיו</label>
-            </div>
+            <!-- Events Display -->
+            {% if upcoming_events %}
+                {% for event in upcoming_events %}
+                    <div class="event-card">
+                        <span class="event-date">{{ event.date }}</span>
+                        <h3>{{ event.title }}</h3>
+                        <p>{{ event.description }}</p>
+                        <p class="location">{{ event.location }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="no-events">אין התוועדויות קרובות כרגע</p>
+            {% endif %}
 
             <!-- Past Events -->
-            <section class="events-section" id="pastEvents" style="display: none;">
-                <h2>התוועדויות שהיו</h2>
+            <div id="pastEvents" style="display: none;">
                 {% if past_events %}
                     {% for event in past_events %}
                         <div class="event-card past-event">
                             <span class="event-date">{{ event.date }}</span>
                             <h3>{{ event.title }}</h3>
                             <p>{{ event.description }}</p>
-                            <!-- Additional event details -->
+                            <p class="location">{{ event.location }}</p>
                         </div>
                     {% endfor %}
                 {% else %}
                     <p class="no-events">אין התוועדויות קודמות</p>
                 {% endif %}
-            </section>
+            </div>
         </div>
-
-        <!-- Add JavaScript for toggle functionality -->
-        <script>
-        document.getElementById('showPastEvents').addEventListener('change', function() {
-            const pastEvents = document.getElementById('pastEvents');
-            pastEvents.style.display = this.checked ? 'block' : 'none';
-        });
-        </script>
     </main>
 
     <footer>
