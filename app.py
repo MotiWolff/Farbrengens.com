@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 import requests
 from urllib.parse import quote
 from os import environ
+from sqlalchemy import text
 
 # Load environment variables’ך
 load_dotenv()
@@ -547,8 +548,8 @@ def admin_dashboard():
             'events_count': len(events),
             'users_count': len(users),
             'admin_count': len([u for u in users if u.is_admin]),
-            'monthly_events': len([e for e in events if datetime.strptime(e['date'], '%Y-%m-%d').month == current_month]),
-            'new_users': len([u for u in users if u.created_at.month == current_month])
+            'monthly_events': len([e for e in events if datetime.strptime(e.get('date', '2000-01-01'), '%Y-%m-%d').month == current_month]),
+            'new_users': len([u for u in users if u.created_at and u.created_at.month == current_month])
         }
         
         app.logger.debug(f'Admin dashboard stats: {stats}')
@@ -816,7 +817,20 @@ def debug_admin():
         })
     return jsonify({'exists': False})
 
+def update_existing_users():
+    try:
+        with app.app_context():
+            # Update users without created_at
+            users_without_date = User.query.filter(User.created_at == None).all()
+            for user in users_without_date:
+                user.created_at = datetime.utcnow()
+            db.session.commit()
+            app.logger.info(f"Updated {len(users_without_date)} users with missing created_at")
+    except Exception as e:
+        app.logger.error(f"Error updating users: {str(e)}")
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        update_existing_users()
     app.run(host='0.0.0.0', port=environ.get('PORT', 5000))
