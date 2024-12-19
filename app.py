@@ -565,7 +565,7 @@ def subscribe_newsletter():
     email = request.form.get('email')
     
     if not email:
-        return jsonify({'status': 'error', 'message': 'נדרשת כתובת אימייל'})
+        return jsonify({'status': 'error', 'message': 'נ��רשת כתובת אימייל'})
     
     try:
         # Check if already subscribed
@@ -752,18 +752,21 @@ def import_data_route():
             # יצירת הטבלאות
             db.create_all()
             
-            # יצירת משתמש אדמין ראשון
-            admin = User(
-                username='admin',
-                email='motiwolff@gmail.com',
-                password_hash='your_password_hash_here',  # החלף את זה בהאש האמיתי
-                is_admin=True
-            )
+            # ידיקה אם המשתמש כבר קיים
+            admin = User.query.filter_by(username='admin').first()
+            if not admin:
+                # יצירת משתמש אדמין רק אם הוא לא קיים
+                admin = User(
+                    username='admin',
+                    email='motiwolff@gmail.com',
+                    password_hash='your_password_hash_here',  # החלף את זה בהאש האמיתי
+                    is_admin=True
+                )
+                db.session.add(admin)
+                db.session.commit()
+                return 'Admin user created successfully!'
             
-            db.session.add(admin)
-            db.session.commit()
-            
-            return 'Database initialized successfully!'
+            return 'Admin user already exists!'
     except Exception as e:
         return f'Error: {str(e)}'
 
