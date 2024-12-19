@@ -598,7 +598,7 @@ def reset_password():
             reset_link = url_for('reset_password_confirm', token=token, _external=True)
             
             try:
-                msg = Message('איפוס סיסמה - התוועדות נקודתית',
+                msg = Message('איפוס סיסמה - ומלאה הארץ פארבריינגענס',
                             recipients=[email])
                 msg.html = render_template('email/reset_password.html', 
                                         reset_link=reset_link)
