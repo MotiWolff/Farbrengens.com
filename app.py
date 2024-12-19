@@ -181,11 +181,40 @@ def load_events(filters=None):
         logger.error(f"Error loading events: {e}")
         return []
 
+def is_event_past(event_date):
+    """Check if event date has passed"""
+    try:
+        event_datetime = datetime.strptime(event_date, '%Y-%m-%d')
+        return event_datetime.date() < datetime.now().date()
+    except:
+        return False
+
 @app.route('/')
 def index():
     app.logger.debug('Accessing index route')
     try:
-        return render_template('index.html')
+        # Load all events
+        with open('data/events.json', 'r', encoding='utf-8') as file:
+            events = json.load(file)
+        
+        # Separate upcoming and past events
+        upcoming_events = []
+        past_events = []
+        
+        for event in events:
+            if is_event_past(event.get('date')):
+                past_events.append(event)
+            else:
+                upcoming_events.append(event)
+        
+        # Sort upcoming events by date
+        upcoming_events.sort(key=lambda x: x.get('date', ''))
+        # Sort past events by date in reverse order
+        past_events.sort(key=lambda x: x.get('date', ''), reverse=True)
+        
+        return render_template('index.html', 
+                             upcoming_events=upcoming_events,
+                             past_events=past_events)
     except Exception as e:
         app.logger.error(f'Error rendering index: {str(e)}')
         return str(e), 500
@@ -196,10 +225,39 @@ def search():
     filters = {
         'city': request.args.get('city', ''),
         'date': request.args.get('date', ''),
-        'type': request.args.get('type', '')
+        'type': request.args.get('type', ''),
+        'show_past': request.args.get('show_past', 'false').lower() == 'true'
     }
-    events = load_events(filters)
-    return render_template('results.html', events=events)
+    
+    try:
+        with open('data/events.json', 'r', encoding='utf-8') as file:
+            events = json.load(file)
+            
+        filtered_events = events
+        
+        # Apply filters
+        if filters['city']:
+            filtered_events = [e for e in filtered_events 
+                             if filters['city'].lower() in e['location'].lower()]
+        if filters['type']:
+            filtered_events = [e for e in filtered_events 
+                             if filters['type'] in e['type']]
+                             
+        # Handle past events
+        if not filters['show_past']:
+            filtered_events = [e for e in filtered_events 
+                             if not is_event_past(e.get('date'))]
+        
+        # Sort events
+        filtered_events.sort(key=lambda x: x.get('date', ''))
+        
+        return render_template('results.html', 
+                             events=filtered_events, 
+                             filters=filters)
+                             
+    except Exception as e:
+        app.logger.error(f'Error in search: {str(e)}')
+        return str(e), 500
 
 @app.route('/api/favorite/<event_id>', methods=['POST'])
 @login_required
@@ -495,7 +553,7 @@ def manage_users():
 @login_required
 def delete_user(user_id):
     if not current_user.is_admin:
-        return jsonify({'status': 'error', 'message': 'אין לך הרשאות למחוק משתמשים'})
+        return jsonify({'status': 'error', 'message': 'אין לך הרשאות למחוק משתמ��ים'})
     
     if current_user.id == user_id:
         return jsonify({'status': 'error', 'message': 'לא ניתן מחוק את המשתמש הנוכחי'})
