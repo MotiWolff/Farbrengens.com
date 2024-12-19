@@ -4,6 +4,8 @@ from datetime import datetime, UTC
 
 def init_database():
     with app.app_context():
+        # Drop all tables first
+        db.drop_all()
         # Create all database tables
         db.create_all()
         
