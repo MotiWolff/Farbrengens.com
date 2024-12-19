@@ -133,6 +133,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256))
     is_admin = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -525,23 +526,37 @@ def admin_dashboard():
         flash('אין לך הרשאות לצפות בדף זה', 'error')
         return redirect(url_for('index'))
     
-    # Load events
-    with open('data/events.json', 'r', encoding='utf-8') as file:
-        events = json.load(file)
-    
-    # Get statistics
-    current_month = datetime.now().month
-    users = User.query.all()
-    
-    stats = {
-        'events_count': len(events),
-        'users_count': len(users),
-        'admin_count': len([u for u in users if u.is_admin]),
-        'monthly_events': len([e for e in events if datetime.strptime(e['date'], '%Y-%m-%d').month == current_month]),
-        'new_users': len([u for u in users if u.created_at.month == current_month])
-    }
-    
-    return render_template('admin_dashboard.html', **stats)
+    try:
+        # Load events
+        events_file = 'data/events.json'
+        if not os.path.exists('data'):
+            os.makedirs('data')
+        
+        if not os.path.exists(events_file):
+            with open(events_file, 'w', encoding='utf-8') as file:
+                json.dump([], file)
+        
+        with open(events_file, 'r', encoding='utf-8') as file:
+            events = json.load(file)
+        
+        # Get statistics
+        current_month = datetime.now().month
+        users = User.query.all()
+        
+        stats = {
+            'events_count': len(events),
+            'users_count': len(users),
+            'admin_count': len([u for u in users if u.is_admin]),
+            'monthly_events': len([e for e in events if datetime.strptime(e['date'], '%Y-%m-%d').month == current_month]),
+            'new_users': len([u for u in users if u.created_at.month == current_month])
+        }
+        
+        app.logger.debug(f'Admin dashboard stats: {stats}')
+        return render_template('admin_dashboard.html', **stats)
+        
+    except Exception as e:
+        app.logger.error(f'Error in admin dashboard: {str(e)}')
+        return f'שגיאה בטעינת לוח הבקרה: {str(e)}', 500
 
 @app.route('/api/clear-cache', methods=['POST'])
 @login_required
