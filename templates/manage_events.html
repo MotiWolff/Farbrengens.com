@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול התוועדויות - התוועדות נקודתית</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="{{ url_for('index') }}">
+                <div class="logo-container">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ומלאה הארץ פארבריינגענס" class="logo-image">
+                </div>
+            </a>
+        </div>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> דף הבית</a>
+            <a href="{{ url_for('add_event') }}"><i class="fas fa-plus"></i> הוסף התוועדות</a>
+            <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> התנתק</a>
+        </div>
+    </nav>
+
+    <main class="admin-container">
+        <h1>ניהול התוועדויות</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="admin-actions">
+            <a href="{{ url_for('add_event') }}" class="admin-button">
+                <i class="fas fa-plus"></i> הוסף התוועדות חדשה
+            </a>
+        </div>
+
+        <div class="events-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>כותרת</th>
+                        <th>תאריך</th>
+                        <th>מיקום</th>
+                        <th>מרצה</th>
+                        <th>סטטוס</th>
+                        <th>פעולות</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                    <tr>
+                        <td>{{ event.title }}</td>
+                        <td>{{ event.date }}</td>
+                        <td>{{ event.location }}</td>
+                        <td>{{ event.speaker }}</td>
+                        <td>
+                            <span class="status-badge 
+                                {% if event.get('capacity') %}
+                                    {% if event.get('registered', 0) >= event.get('capacity') %}
+                                        full
+                                    {% elif event.get('registered', 0) >= event.get('capacity') * 0.8 %}
+                                        almost-full
+                                    {% else %}
+                                        available
+                                    {% endif %}
+                                {% else %}
+                                    available
+                                {% endif %}">
+                                {% if event.get('capacity') %}
+                                    {{ event.get('registered', 0) }}/{{ event.capacity }}
+                                {% else %}
+                                    לא הוגבל
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td class="actions">
+                            <a href="{{ url_for('edit_event', event_id=event.id) }}" class="action-button edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button onclick="deleteEvent('{{ event.id }}')" class="action-button delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        function deleteEvent(eventId) {
+            if (confirm('האם אתה בטוח שברצונך למחוק התוועדות זו?')) {
+                fetch(`/api/events/${eventId}`, {
+                    method: 'DELETE',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        location.reload();
+                    } else {
+                        alert('שגיאה במחיקת ההתוועדות');
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html> 

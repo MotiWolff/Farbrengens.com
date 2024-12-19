@@ -1,0 +1,33 @@
+<!-- הוספת לוגים JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Event data:', {{ event|tojson|safe }});
+    console.log('Coordinates:', {{ event.latitude }}, {{ event.longitude }});
+});
+</script> 
+
+<!-- עדכון הצגת מספר המשתתפים -->
+<div class="event-capacity">
+    {% if event.capacity %}
+        <p>נרשמו {{ registered_count }} מתוך {{ event.capacity }} משתתפים</p>
+    {% else %}
+        <p>נרשמו {{ registered_count }} משתתפים</p>
+    {% endif %}
+</div>
+
+<!-- עדכון כפתור ההרשמה -->
+<div class="registration-button">
+    {% if current_user.is_authenticated %}
+        {% if is_registered %}
+            <button class="btn btn-secondary" disabled>כבר נרשמת</button>
+        {% elif event.capacity and registered_count >= event.capacity %}
+            <button class="btn btn-secondary" disabled>ההתוועדות מלאה</button>
+        {% else %}
+            <form action="{{ url_for('register_event', event_id=event.id) }}" method="post">
+                <button type="submit" class="btn btn-primary">הירשם להתוועדות</button>
+            </form>
+        {% endif %}
+    {% else %}
+        <a href="{{ url_for('login') }}" class="btn btn-primary">התחבר כדי להירשם</a>
+    {% endif %}
+</div> 

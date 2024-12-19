@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ההתוועדויות שלי - ומלאה הארץ פארבריינגענס</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="{{ url_for('index') }}">
+                <div class="logo-container">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ומלאה הארץ פארבריינגענס" class="logo-image">
+                </div>
+            </a>
+        </div>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> דף הבית</a>
+            <a href="{{ url_for('add_event') }}"><i class="fas fa-plus"></i> הוסף התוועדות</a>
+            <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> התנתק</a>
+        </div>
+    </nav>
+
+    <main class="events-container">
+        <h1>ההתוועדויות שלי</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="events-grid">
+            {% for event in events %}
+                <div class="event-card">
+                    {% if event.image %}
+                        <img src="{{ url_for('static', filename='images/' + event.image) }}" alt="{{ event.title }}">
+                    {% endif %}
+                    <div class="event-content">
+                        <h2>{{ event.title }}</h2>
+                        <p class="event-details">
+                            <i class="fas fa-calendar"></i> {{ event.date }}
+                            <i class="fas fa-clock"></i> {{ event.time }}
+                        </p>
+                        <p class="event-location">
+                            <i class="fas fa-map-marker-alt"></i> {{ event.location }}
+                        </p>
+                        <p class="event-status">
+                            סטטוס: 
+                            {% if event.approved %}
+                                <span class="status-approved">מאושר</span>
+                            {% else %}
+                                <span class="status-pending">ממתין לאישור</span>
+                            {% endif %}
+                        </p>
+                        <div class="event-actions">
+                            <a href="{{ url_for('edit_event', event_id=event.id) }}" class="action-button edit">
+                                <i class="fas fa-edit"></i> ערוך
+                            </a>
+                            <button onclick="deleteEvent('{{ event.id }}')" class="action-button delete">
+                                <i class="fas fa-trash"></i> מחק
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="no-events">
+                    <i class="fas fa-calendar-times"></i>
+                    <p>עדיין לא יצרת התוועדויות</p>
+                    <a href="{{ url_for('add_event') }}" class="add-event-button">
+                        <i class="fas fa-plus"></i> צור התוועדות חדשה
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <script>
+        function deleteEvent(eventId) {
+            if (confirm('האם אתה בטוח שברצונך למחוק התוועדות זו?')) {
+                fetch(`/api/events/${eventId}`, {
+                    method: 'DELETE',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        location.reload();
+                    } else {
+                        alert('שגיאה במחיקת ההתוועדות');
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html> 

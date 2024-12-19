@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ומלאה הארץ פארבריינגענס</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            {% if current_user.is_authenticated %}
+                {% if current_user.is_admin %}
+                    <a href="/admin/dashboard"><i class="fas fa-cog"></i> ניהול</a>
+                {% endif %}
+                <a href="/my-events"><i class="fas fa-calendar-alt"></i> ההתוועדויות שלי</a>
+                <a href="/logout"><i class="fas fa-sign-out-alt"></i> התנתקות</a>
+            {% else %}
+                <a href="/login"><i class="fas fa-sign-in-alt"></i> התחברות</a>
+                <a href="/signup"><i class="fas fa-user-plus"></i> הרשמה</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main>
+        <div class="hero-section">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ומלאה הארץ פארבריינגענס" class="hero-logo">
+        </div>
+
+        <div class="search-section">
+            <form action="/search" method="get" class="search-form">
+                <div class="search-container">
+                    <div class="search-field">
+                        <label for="city">
+                            <i class="fas fa-map-marker-alt"></i>
+                            חפשו לפי עיר
+                        </label>
+                        <input type="text" id="city" name="city" placeholder="לדוגמה: תל אביב">
+                    </div>
+
+                    <div class="search-field">
+                        <label for="date">
+                            <i class="fas fa-calendar"></i>
+                            תאריך
+                        </label>
+                        <input type="date" id="date" name="date">
+                    </div>
+
+                    <div class="search-field">
+                        <label for="type">
+                            <i class="fas fa-tag"></i>
+                            סוג התוועדות
+                        </label>
+                        <select id="type" name="type">
+                            <option value="">הכל</option>
+                            <option value="weekly">התוועדות שבועית</option>
+                            <option value="shabbat">התוועדות שבת</option>
+                            <option value="special">התוועדות מיוחדת</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="search-button">
+                    <i class="fas fa-search"></i>
+                    חפשו התוועדות
+                </button>
+            </form>
+        </div>
+
+        <section class="faq-section">
+            <h2>שאלות נפוצות</h2>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <h3><i class="fas fa-question-circle"></i> מה זה התוועדות?</h3>
+                    <p>התוועדות היא מפגש חסידי בו יושבים יחד, שרים ניגונים, מדברים דברי תורה ומתחזקים יחד בעבודת ה'.</p>
+                </div>
+                <div class="faq-item">
+                    <h3><i class="fas fa-question-circle"></i> איך אני מצטרף?</h3>
+                    <p>פשוט חפש התוועדות קרובה אליך, הרשם דרך האתר, והגע למקום בזמן המיועד.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="newsletter-section">
+            <h2>הישארו מעודכנים</h2>
+            <p>הירשמו לניוזלטר שלנו לקבלת עדכונים על התוועדויות חדשות</p>
+            <form class="newsletter-form" id="newsletter-form">
+                <input type="email" name="email" placeholder="הכנס את כתובת המייל שלך" required>
+                <button type="submit">הרשם</button>
+            </form>
+            <div id="newsletter-message" class="alert" style="display: none;"></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>© 2024 ומלאה הארץ פארבריינגענס. כל הזכויות שמורות.</p>
+        </div>
+    </footer>
+</body>
+</html>

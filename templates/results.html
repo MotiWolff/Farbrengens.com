@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תוצאות החיפוש - התוועדות נקודתית</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="{{ url_for('index') }}">
+                <div class="logo-container">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ומלאה הארץ פארבריינגענס" class="logo-image">
+                </div>
+            </a>
+        </div>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">
+                <i class="fas fa-home"></i> דף הבית
+            </a>
+            {% if current_user.is_authenticated %}
+                <a href="/my-events"><i class="fas fa-calendar-alt"></i> ההתוועדויות שלי</a>
+                <a href="/logout"><i class="fas fa-sign-out-alt"></i> התנתק</a>
+            {% else %}
+                <a href="/login"><i class="fas fa-sign-in-alt"></i> התחבר</a>
+                <a href="/signup"><i class="fas fa-user-plus"></i> הרשמה</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="results-page">
+        <div class="results-header">
+            <h1>תוצאות החיפוש</h1>
+            <div class="view-toggle">
+                <button class="active" data-view="list">
+                    <i class="fas fa-list"></i> רשימה
+                </button>
+                <button data-view="map">
+                    <i class="fas fa-map-marker-alt"></i> מפה
+                </button>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <form action="/search" method="get" class="filter-form">
+                <div class="filter-group">
+                    <input type="text" name="city" placeholder="חיפוש לפי עיר" value="{{ request.args.get('city', '') }}">
+                    <input type="date" name="date" value="{{ request.args.get('date', '') }}">
+                    <select name="type">
+                        <option value="">כל הסוגים</option>
+                        <option value="weekly" {% if request.args.get('type') == 'weekly' %}selected{% endif %}>התוועדות שבועית</option>
+                        <option value="shabbat" {% if request.args.get('type') == 'shabbat' %}selected{% endif %}>התוועדות שבת</option>
+                    </select>
+                    <button type="submit">
+                        <i class="fas fa-filter"></i> סנן
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="results-container">
+            <div id="list-view" class="active">
+                {% if events %}
+                    <div class="events-grid">
+                        {% for event in events %}
+                            <div class="event-card">
+                                <div class="event-image">
+                                    {% if event.image %}
+                                        <img src="{{ url_for('static', filename='images/' + event.image) }}" alt="{{ event.title }}" class="event-image clickable-image">
+                                    {% endif %}
+                                </div>
+                                <div class="event-content">
+                                    <h2>{{ event.title }}</h2>
+                                    <div class="event-meta">
+                                        <span><i class="fas fa-calendar"></i> {{ event.date }}</span>
+                                        <span><i class="fas fa-clock"></i> {{ event.time }}</span>
+                                    </div>
+                                    <div class="event-speaker">
+                                        <i class="fas fa-user"></i> {{ event.speaker }}
+                                    </div>
+                                    <p class="event-location">
+                                        <i class="fas fa-map-marker-alt"></i> {{ event.location }}
+                                    </p>
+                                    <p>{{ event.description }}</p>
+                                    <div class="event-actions">
+                                        <a href="javascript:void(0)" onclick="openGoogleMapsNavigation('{{ event.address }}')" class="action-button">
+                                            <i class="fas fa-map-marked-alt"></i> נווט
+                                        </a>
+                                        <button class="share-btn">
+                                            <i class="fas fa-share-alt"></i> שתף
+                                        </button>
+                                    </div>
+                                    <div class="liquor-stores-section">
+                                        <a href="javascript:void(0)" onclick="searchLiquorStores('{{ event.address }}')" class="find-stores-btn">
+                                            <i class="fas fa-wine-bottle"></i> מצא חנויות משקה באזור
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="no-results">
+                        <i class="fas fa-search"></i>
+                        <h2>לא נמצאו התוועדויות</h2>
+                        <p>נסה לשנות את פרמטרי החיפוש</p>
+                        <a href="{{ url_for('index') }}" class="back-btn">
+                            <i class="fas fa-arrow-right"></i> חזור לדף הבית
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div id="map-view">
+                <div id="map" class="map-container"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="social-links">
+                <a href="#"><i class="fab fa-facebook"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+            </div>
+            <p>© 2024 התוועדות נקודתית. כל הזכויות שמורות.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Pass events data to JavaScript
+        const events = {{ events|tojson|safe }};
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <div id="storesModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>חנויות אלכוהול בסביבה</h2>
+            <div id="storesMap" style="height: 300px; margin-bottom: 20px;"></div>
+            <div id="storesList"></div>
+        </div>
+    </div>
+
+    <div id="imageModal" class="modal">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
+    <script>
+    function openGoogleMapsNavigation(address) {
+        const navigationUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+        window.open(navigationUrl, '_blank');
+    }
+
+    function searchLiquorStores(address) {
+        const searchQuery = encodeURIComponent(`חנויות אלכוהול ליד ${address}`);
+        window.open(`https://www.google.com/maps/search/${searchQuery}`, '_blank');
+    }
+    </script>
+
+    <script>
+    // מצא את המודאל
+    var modal = document.getElementById("imageModal");
+    var modalImg = document.getElementById("modalImage");
+
+    // הוסף מאזין לחיצה לכל התמונות עם הקלאס clickable-image
+    document.querySelectorAll('.clickable-image').forEach(img => {
+        img.onclick = function() {
+            modal.style.display = "block";
+            modalImg.src = this.src;
+        }
+    });
+
+    // סגירת המודאל
+    document.querySelector('.close-modal').onclick = function() {
+        modal.style.display = "none";
+    }
+
+    // סגירה בלחיצה מחוץ לתמונה
+    modal.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // סגירה בלחיצה על ESC
+    document.addEventListener('keydown', function(event) {
+        if (event.key === "Escape") {
+            modal.style.display = "none";
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול משתמשים - התוועדות נקודתית</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="{{ url_for('index') }}">
+                <div class="logo-container">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ומלאה הארץ פארבריינגענס" class="logo-image">
+                </div>
+            </a>
+        </div>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> דף הבית</a>
+            <a href="{{ url_for('manage_events') }}"><i class="fas fa-calendar"></i> ניהול התוועדויות</a>
+            <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> התנתק</a>
+        </div>
+    </nav>
+
+    <main class="admin-container">
+        <h1>ניהול משתמשים</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="users-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>אימייל</th>
+                        <th>סטטוס</th>
+                        <th>תאריך הרשמה</th>
+                        <th>פעולות</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            <span class="status-badge {% if user.is_admin %}admin{% else %}user{% endif %}">
+                                {{ 'מנהל' if user.is_admin else 'משתמש' }}
+                            </span>
+                        </td>
+                        <td>{{ user.created_at.strftime('%d/%m/%Y') if user.created_at else 'לא ידוע' }}</td>
+                        <td class="actions">
+                            <button onclick="toggleAdmin('{{ user.id }}')" class="action-button edit" {% if user.email == current_user.email %}disabled{% endif %}>
+                                <i class="fas {% if user.is_admin %}fa-user-minus{% else %}fa-user-plus{% endif %}"></i>
+                            </button>
+                            <button onclick="deleteUser('{{ user.id }}')" class="action-button delete" {% if user.email == current_user.email %}disabled{% endif %}>
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        function deleteUser(userId) {
+            if (confirm('האם אתה בטוח שברצונך למחוק משתמש זה?')) {
+                fetch(`/api/users/${userId}`, {
+                    method: 'DELETE',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        location.reload();
+                    } else {
+                        alert('שגיאה במחיקת המשתמש');
+                    }
+                });
+            }
+        }
+
+        function toggleAdmin(userId) {
+            fetch(`/api/users/${userId}/toggle-admin`, {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('שגיאה בעדכון הרשאות המשתמש');
+                }
+            });
+        }
+    </script>
+</body>
+</html> 

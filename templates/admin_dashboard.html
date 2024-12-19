@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>לוח בקרה - התוועדות נקודתית</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="{{ url_for('index') }}">
+                <div class="logo-container">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ומלאה הארץ פארבריינגענס" class="logo-image">
+                </div>
+            </a>
+        </div>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> דף הבית</a>
+            <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> התנתק</a>
+        </div>
+    </nav>
+
+    <main class="admin-dashboard">
+        <h1>לוח בקרה</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="dashboard-grid">
+            <!-- Events Management -->
+            <div class="dashboard-card">
+                <h2><i class="fas fa-calendar-alt"></i> ניהול התוועדויות</h2>
+                <div class="card-content">
+                    <p>מספר התוועדויות: {{ events_count }}</p>
+                    <div class="card-actions">
+                        <a href="{{ url_for('manage_events') }}" class="dashboard-button">
+                            <i class="fas fa-list"></i> רשימת התוועדויות
+                        </a>
+                        <a href="{{ url_for('add_event') }}" class="dashboard-button">
+                            <i class="fas fa-plus"></i> הוסף התוועדות
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Management -->
+            <div class="dashboard-card">
+                <h2><i class="fas fa-users"></i> ניהול משתמשים</h2>
+                <div class="card-content">
+                    <p>מספר משתמשים: {{ users_count }}</p>
+                    <p>מנהלים: {{ admin_count }}</p>
+                    <div class="card-actions">
+                        <a href="{{ url_for('manage_users') }}" class="dashboard-button">
+                            <i class="fas fa-user-cog"></i> ניהול משתמשים
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Settings -->
+            <div class="dashboard-card">
+                <h2><i class="fas fa-cogs"></i> הגדרות מערכת</h2>
+                <div class="card-content">
+                    <div class="card-actions">
+                        <a href="{{ url_for('debug_db') }}" class="dashboard-button">
+                            <i class="fas fa-database"></i> בדיקת מסד נתונים
+                        </a>
+                        <button onclick="clearCache()" class="dashboard-button">
+                            <i class="fas fa-broom"></i> ניקוי מטמון
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="dashboard-card">
+                <h2><i class="fas fa-chart-bar"></i> סטטיסטיקה</h2>
+                <div class="card-content">
+                    <p>התוועדויות החודש: {{ monthly_events }}</p>
+                    <p>משתמשים חדשים החודש: {{ new_users }}</p>
+                    <div class="card-actions">
+                        <a href="#" class="dashboard-button">
+                            <i class="fas fa-download"></i> ייצוא נתונים
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import Events -->
+            <div class="dashboard-card">
+                <h2><i class="fas fa-download"></i> יבוא התוועדויות</h2>
+                <div class="card-content">
+                    <button onclick="importEvents()" class="dashboard-button">
+                        <i class="fas fa-sync"></i> יבא התוועדויות חדשות
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function clearCache() {
+            if (confirm('האם אתה בטוח שברצונך לנקות את המטמון?')) {
+                fetch('/api/clear-cache', {
+                    method: 'POST',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('המטמון נוקה בהצלחה');
+                    } else {
+                        alert('שגיאה בניקוי המטמון');
+                    }
+                });
+            }
+        }
+
+        function importEvents() {
+            if (confirm('האם אתה בטוח שברצונך לייבא התוועדויות חדשות?')) {
+                fetch('/admin/import-events', {
+                    method: 'POST',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.status === 'success') {
+                        location.reload();
+                    }
+                })
+                .catch(error => {
+                    alert('שגיאה ביבוא התוועדויות');
+                });
+            }
+        }
+    </script>
+</body>
+</html> 
