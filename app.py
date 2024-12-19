@@ -234,31 +234,73 @@ def login():
 @app.route('/signup', methods=['GET', 'POST'])
 @limiter.limit("3 per minute")
 def signup():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
+    try:
+        if request.method == 'POST':
+            app.logger.debug('Processing signup request')
+            
+            # Get form data
+            email = request.form.get('email')
+            password = request.form.get('password')
+            confirm_password = request.form.get('confirm_password')
+            
+            # Validate email
+            if not email:
+                flash('נא להזין כתובת אימייל', 'error')
+                return redirect(url_for('signup'))
+            
+            app.logger.debug(f'Checking if email {email} already exists')
+            if User.query.filter_by(email=email).first():
+                flash('כתובת האימייל כבר קיימת במערכת', 'error')
+                return redirect(url_for('signup'))
+            
+            # Validate password
+            if not password:
+                flash('נא להזין סיסמה', 'error')
+                return redirect(url_for('signup'))
+                
+            if password != confirm_password:
+                flash('הסיסמאות אינן תואמות', 'error')
+                return redirect(url_for('signup'))
+            
+            # Create username from email
+            username = email.split('@')[0]
+            # Make sure username is unique
+            base_username = username
+            counter = 1
+            while User.query.filter_by(username=username).first():
+                username = f"{base_username}{counter}"
+                counter += 1
+            
+            app.logger.debug('Creating new user')
+            new_user = User(
+                email=email,
+                username=username,
+                password_hash=generate_password_hash(password),
+                is_admin=False,  # Explicitly set is_admin
+                created_at=datetime.utcnow()  # Explicitly set created_at
+            )
+            
+            try:
+                app.logger.debug('Adding user to database')
+                db.session.add(new_user)
+                db.session.commit()
+                
+                app.logger.debug('User created successfully')
+                flash('נרשמת בהצלחה! אנא התחבר', 'success')
+                return redirect(url_for('login'))
+                
+            except Exception as e:
+                db.session.rollback()
+                app.logger.error(f'Database error during user creation: {str(e)}')
+                flash('אירעה שגיאה בשמירת המשתמש. אנא נסה שנית', 'error')
+                return redirect(url_for('signup'))
         
-        if User.query.filter_by(email=email).first():
-            flash('כתובת האימייל כבר קיימת במערכת')
-            return redirect(url_for('signup'))
+        return render_template('signup.html')
         
-        if password != confirm_password:
-            flash('הסיסמאות אינן תואמות')
-            return redirect(url_for('signup'))
-        
-        new_user = User(
-            email=email,
-            password=generate_password_hash(password)
-        )
-        
-        db.session.add(new_user)
-        db.session.commit()
-        
-        flash('נרשמת בהצלחה! אנא התחבר')
-        return redirect(url_for('login'))
-    
-    return render_template('signup.html')
+    except Exception as e:
+        app.logger.error(f'Error in signup process: {str(e)}')
+        flash('אירעה שגיאה בתהליך ההרשמה. אנא נסה שנית', 'error')
+        return redirect(url_for('signup'))
 
 @app.route('/logout')
 @login_required
