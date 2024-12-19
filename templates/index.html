@@ -99,6 +99,38 @@
         </section>
 
         <div class="events-container">
+            <!-- Search Form -->
+            <form action="{{ url_for('search') }}" method="GET" class="search-form">
+                <div class="form-group">
+                    <label for="city">עיר</label>
+                    <input type="text" name="city" id="city" value="{{ request.args.get('city', '') }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="date">תאריך</label>
+                    <input type="date" name="date" id="date" value="{{ request.args.get('date', '') }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="type">סוג התוועדות</label>
+                    <select name="type" id="type">
+                        <option value="">הכל</option>
+                        <option value="התוועדות" {% if request.args.get('type') == 'התוועדות' %}selected{% endif %}>התוועדות</option>
+                        <option value="שיעור" {% if request.args.get('type') == 'שיעור' %}selected{% endif %}>שיעור</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="show_past" value="true" 
+                               {% if request.args.get('show_past') == 'true' %}checked{% endif %}>
+                        הצג גם התוועדויות שהיו
+                    </label>
+                </div>
+
+                <button type="submit">חפש</button>
+            </form>
+
             <!-- Upcoming Events -->
             <section class="events-section">
                 <h2>התוועדויות קרובות</h2>
@@ -106,7 +138,6 @@
                     {% for event in upcoming_events %}
                         <div class="event-card">
                             <span class="event-date">{{ event.date }}</span>
-                            <!-- Event content -->
                             <h3>{{ event.title }}</h3>
                             <p>{{ event.description }}</p>
                             <!-- Additional event details -->
@@ -130,7 +161,6 @@
                     {% for event in past_events %}
                         <div class="event-card past-event">
                             <span class="event-date">{{ event.date }}</span>
-                            <!-- Event content -->
                             <h3>{{ event.title }}</h3>
                             <p>{{ event.description }}</p>
                             <!-- Additional event details -->
