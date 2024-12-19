@@ -273,6 +273,7 @@ def load_user(user_id):
 def manage_events():
     try:
         app.logger.debug('Accessing manage_events route')
+        app.logger.debug(f'Current user: {current_user.email}, Is admin: {current_user.is_admin}')
         
         if not current_user.is_admin:
             app.logger.warning(f'Non-admin user {current_user.email} attempted to access admin page')
@@ -280,15 +281,34 @@ def manage_events():
             return redirect(url_for('index'))
         
         app.logger.debug('Loading events from JSON file')
-        with open('data/events.json', 'r', encoding='utf-8') as file:
+        # Check if directory exists
+        if not os.path.exists('data'):
+            app.logger.error('Data directory does not exist')
+            os.makedirs('data')
+            
+        # Check if file exists
+        events_file = 'data/events.json'
+        if not os.path.exists(events_file):
+            app.logger.warning('Events file does not exist, creating empty file')
+            with open(events_file, 'w', encoding='utf-8') as file:
+                json.dump([], file)
+        
+        # Load events
+        with open(events_file, 'r', encoding='utf-8') as file:
             events = json.load(file)
         
         app.logger.debug(f'Successfully loaded {len(events)} events')
         return render_template('manage_events.html', events=events)
         
+    except FileNotFoundError as e:
+        app.logger.error(f'File not found error: {str(e)}')
+        return f'שגיאה: קובץ האירועים לא נמצא', 500
+    except json.JSONDecodeError as e:
+        app.logger.error(f'JSON decode error: {str(e)}')
+        return f'שגיאה: בעיה בפורמט קובץ האירועים', 500
     except Exception as e:
-        app.logger.error(f'Error in manage_events: {str(e)}')
-        return f'שגיאה בטעינת דף הניהול: {str(e)}', 500
+        app.logger.error(f'Unexpected error in manage_events: {str(e)}')
+        return f'שגיאה בלתי צפויה: {str(e)}', 500
 
 @app.route('/event/add', methods=['GET', 'POST'])
 @login_required
