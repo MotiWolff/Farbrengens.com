@@ -83,12 +83,14 @@ body {
 }
 
 .search-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding: 20px;
     background: white;
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    max-width: 1000px;
-    margin: 0 auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .search-container {
@@ -1487,4 +1489,54 @@ button[disabled] {
 
 .close-modal:hover {
     color: #bbb;
+}
+
+/* Add to existing CSS file */
+
+/* Search Form Styles */
+.search-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+/* Events Container */
+.events-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .search-form {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .form-group {
+        width: 100%;
+    }
+
+    .events-container {
+        grid-template-columns: 1fr;
+    }
 }
