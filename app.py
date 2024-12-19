@@ -127,18 +127,27 @@ def handle_image_upload(file, old_image=None):
         return None, "שגיאה בהעלאת התמונה. אנא נסה שנית"
 
 # User Model
-class User(UserMixin, db.Model):
+class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(120), nullable=False)
-    favorite_events = db.Column(db.Text, default='[]')
+    password_hash = db.Column(db.String(128))
     is_admin = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    reset_token = db.Column(db.String(100), unique=True)
-    reset_token_expiry = db.Column(db.DateTime)
 
-    def get_favorites(self):
-        return json.loads(self.favorite_events)
+class Event(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    date = db.Column(db.DateTime, nullable=False)
+    location = db.Column(db.String(200))
+    capacity = db.Column(db.Integer)
+    image_url = db.Column(db.String(200))
+
+class Registration(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    registration_date = db.Column(db.DateTime, default=datetime.utcnow)
 
 # Add this with your other models
 class Newsletter(db.Model):
