@@ -127,7 +127,7 @@ def handle_image_upload(file, old_image=None):
         return None, "שגיאה בהעלאת התמונה. אנא נסה שנית"
 
 # User Model
-class User(db.Model):
+class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -218,34 +218,13 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
         
-        # Detailed debug logging
-        print("="*50)
-        print(f"Login attempt details:")
-        print(f"Email provided: {email}")
-        print(f"Password provided: {password}")
-        
         user = User.query.filter_by(email=email).first()
-        if user:
-            print(f"User found in database:")
-            print(f"User ID: {user.id}")
-            print(f"User email: {user.email}")
-            print(f"User is_admin: {user.is_admin}")
-            print(f"Stored password hash: {user.password}")
-            
-            # Test password
-            is_password_correct = check_password_hash(user.password, password)
-            print(f"Password check result: {is_password_correct}")
-            
-            if is_password_correct:
-                login_user(user)
-                print("Login successful!")
-                return redirect(url_for('index'))
-            else:
-                print("Password verification failed")
-        else:
-            print("No user found with this email")
+        if user and check_password_hash(user.password_hash, password):
+            login_user(user)
+            flash('התחברת בהצלחה!', 'success')
+            return redirect(url_for('index'))
         
-        flash('אימייל או סיסמה לא נכונים')
+        flash('אימייל או סיסמה לא נכונים', 'error')
         return redirect(url_for('login'))
     
     return render_template('login.html')
@@ -607,7 +586,7 @@ def reset_password():
             reset_link = url_for('reset_password_confirm', token=token, _external=True)
             
             try:
-                msg = Message('איפוס סיסמה - ומלאה הארץ פארבריינגענס',
+                msg = Message('איפוס סיסמה - ומלאה הארץ פאר��ריינגענס',
                             recipients=[email])
                 msg.html = render_template('email/reset_password.html', 
                                         reset_link=reset_link)
@@ -777,6 +756,19 @@ def import_data_route():
                 
     except Exception as e:
         return f'Error: {str(e)}'
+
+@app.route('/debug_admin')
+def debug_admin():
+    admin = User.query.filter_by(email='motiwolff@gmail.com').first()
+    if admin:
+        return jsonify({
+            'exists': True,
+            'username': admin.username,
+            'email': admin.email,
+            'is_admin': admin.is_admin,
+            'has_password': bool(admin.password_hash)
+        })
+    return jsonify({'exists': False})
 
 if __name__ == '__main__':
     with app.app_context():
