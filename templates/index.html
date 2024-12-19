@@ -36,7 +36,7 @@
                             <i class="fas fa-map-marker-alt"></i>
                             חפשו לפי עיר
                         </label>
-                        <input type="text" id="city" name="city" placeholder="לדוגמה: תל אביב">
+                        <input type="text" id="city" name="city" placeholder="לדוגמה: תל אביב" value="{{ filters.city }}">
                     </div>
 
                     <div class="search-field">
@@ -44,7 +44,7 @@
                             <i class="fas fa-calendar"></i>
                             תאריך
                         </label>
-                        <input type="date" id="date" name="date">
+                        <input type="date" id="date" name="date" value="{{ filters.date }}">
                     </div>
 
                     <div class="search-field">
@@ -54,14 +54,12 @@
                         </label>
                         <select id="type" name="type">
                             <option value="">הכל</option>
-                            <option value="weekly">התוועדות שבועית</option>
-                            <option value="shabbat">התוועדות שבת</option>
-                            <option value="special">התוועדות מיוחדת</option>
+                            <option value="התוועדות" {% if filters.type == 'התוועדות' %}selected{% endif %}>התוועדות</option>
+                            <option value="שיעור" {% if filters.type == 'שיעור' %}selected{% endif %}>שיעור</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- Add past events toggle -->
                 <div class="form-group">
                     <label>
                         <input type="checkbox" name="show_past" value="true" 
